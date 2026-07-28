@@ -124,56 +124,60 @@ export default function ReportsPage() {
 
         {/* Conteúdo do Relatório: Passageiros Confirmados */}
         {reportType === 'passengers_confirmed' && (
-          <table className="w-full text-left text-xs font-body border-collapse">
-            <thead className="border-b-2 border-jornada-navy font-heading text-jornada-navy uppercase">
-              <tr>
-                <th className="py-2">#</th>
-                <th className="py-2">Nome do Passageiro</th>
-                <th className="py-2">Telefone</th>
-                <th className="py-2">Ponto de Embarque</th>
-                <th className="py-2">Situação Financeira</th>
-                <th className="py-2 text-center">Assinatura / Presença</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-jornada-border">
-              {passengers.filter(p => p.status !== 'cancelado').map((p, index) => (
-                <tr key={p.id} className="py-2">
-                  <td className="py-2 font-heading font-bold">{index + 1}</td>
-                  <td className="py-2 font-semibold text-jornada-navy">{p.full_name}</td>
-                  <td className="py-2">{p.phone}</td>
-                  <td className="py-2">{p.pickup_location}</td>
-                  <td className="py-2"><Badge status={p.financial_status} /></td>
-                  <td className="py-2 text-center text-jornada-muted">___________________________</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-body border-collapse min-w-[500px]">
+              <thead className="border-b-2 border-jornada-navy font-heading text-jornada-navy uppercase">
+                <tr>
+                  <th className="py-2">#</th>
+                  <th className="py-2">Nome do Passageiro</th>
+                  <th className="py-2">Telefone</th>
+                  <th className="py-2">Ponto de Embarque</th>
+                  <th className="py-2">Situação Financeira</th>
+                  <th className="py-2 text-center">Assinatura / Presença</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-jornada-border">
+                {passengers.filter(p => p.status !== 'cancelado').map((p, index) => (
+                  <tr key={p.id} className="py-2">
+                    <td className="py-2 font-heading font-bold">{index + 1}</td>
+                    <td className="py-2 font-semibold text-jornada-navy">{p.full_name}</td>
+                    <td className="py-2">{p.phone}</td>
+                    <td className="py-2">{p.pickup_location}</td>
+                    <td className="py-2"><Badge status={p.financial_status} /></td>
+                    <td className="py-2 text-center text-jornada-muted">___________________________</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Conteúdo: Contatos de Emergência */}
         {reportType === 'emergency_contacts' && (
-          <table className="w-full text-left text-xs font-body border-collapse">
-            <thead className="border-b-2 border-jornada-navy font-heading text-jornada-navy uppercase">
-              <tr>
-                <th className="py-2">Passageiro</th>
-                <th className="py-2">Telefone</th>
-                <th className="py-2">Contato de Emergência</th>
-                <th className="py-2">Telefone Emergência</th>
-                <th className="py-2">Restrições / Observações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-jornada-border">
-              {passengers.map((p) => (
-                <tr key={p.id}>
-                  <td className="py-2 font-semibold text-jornada-navy">{p.full_name}</td>
-                  <td className="py-2">{p.phone}</td>
-                  <td className="py-2 font-semibold">{p.emergency_contact_name}</td>
-                  <td className="py-2">{p.emergency_contact_phone}</td>
-                  <td className="py-2 text-jornada-muted">{p.medical_info || p.notes || 'Nenhuma'}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-body border-collapse min-w-[500px]">
+              <thead className="border-b-2 border-jornada-navy font-heading text-jornada-navy uppercase">
+                <tr>
+                  <th className="py-2">Passageiro</th>
+                  <th className="py-2">Telefone</th>
+                  <th className="py-2">Contato de Emergência</th>
+                  <th className="py-2">Telefone Emergência</th>
+                  <th className="py-2">Restrições / Observações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-jornada-border">
+                {passengers.map((p) => (
+                  <tr key={p.id}>
+                    <td className="py-2 font-semibold text-jornada-navy">{p.full_name}</td>
+                    <td className="py-2">{p.phone}</td>
+                    <td className="py-2 font-semibold">{p.emergency_contact_name}</td>
+                    <td className="py-2">{p.emergency_contact_phone}</td>
+                    <td className="py-2 text-jornada-muted">{p.medical_info || p.notes || 'Nenhuma'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Rodapé da Impressão */}

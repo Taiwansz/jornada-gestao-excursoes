@@ -113,13 +113,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileNav }) => {
 
           <div className="flex items-center gap-2">
             {church?.logo_url ? (
-              <img src={church.logo_url} alt={church.name} className="w-7 h-7 object-contain rounded" />
+              <img src={church.logo_url} alt={church.name} className="w-7 h-7 object-contain rounded shrink-0" />
             ) : (
-              <div className="w-7 h-7 rounded bg-jornada-navy text-white text-xs font-bold font-heading flex items-center justify-center">
+              <div className="w-7 h-7 rounded bg-jornada-navy text-white text-xs font-bold font-heading flex items-center justify-center shrink-0">
                 {church?.name?.substring(0, 2).toUpperCase() || 'IG'}
               </div>
             )}
-            <span className="font-heading font-bold text-sm text-jornada-navy truncate max-w-[150px] sm:max-w-[240px]">
+            <span className="font-heading font-bold text-sm text-jornada-navy truncate max-w-[180px] sm:max-w-[320px]">
               {church?.name || 'Igreja'}
             </span>
           </div>
