@@ -48,7 +48,7 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-1.5 bg-jornada-terracotta text-white rounded-full px-3.5 py-1.5 font-heading text-[11px] font-bold shadow-md transition-all duration-200 shrink-0 border border-white/20"
+                className="flex items-center gap-1.5 bg-jornada-terracotta text-white rounded-full px-3.5 py-2 min-h-[42px] font-heading text-[11px] font-bold shadow-md transition-all duration-200 shrink-0 border border-white/20"
               >
                 <Icon className="w-4 h-4 stroke-[2.2px]" />
                 <span className="tracking-tight">{item.label}</span>
@@ -65,24 +65,24 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
             <Link
               key={item.href}
               href={item.href}
-              className="relative p-2 text-white/75 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
+              className="relative p-2.5 min-w-[42px] min-h-[42px] text-white/75 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
               title={item.label}
             >
               <Icon className="w-5 h-5 stroke-[1.8px]" />
               {item.badge && item.badge > 0 ? (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-jornada-terracotta rounded-full ring-2 ring-jornada-navy" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-jornada-terracotta rounded-full ring-2 ring-jornada-navy" />
               ) : null}
             </Link>
           );
         })}
 
         {/* Separador Sutil Vidro */}
-        <div className="w-px h-4 bg-white/20 my-auto mx-0.5" />
+        <div className="w-px h-5 bg-white/20 my-auto mx-0.5" />
 
         {/* Botão de Ações do App (Substitui menu lateral por Bottom Action Sheet) */}
         <button
           onClick={onOpenActionSheet}
-          className="p-2 text-white/75 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
+          className="p-2.5 min-w-[42px] min-h-[42px] text-white/75 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
           title="Ações e Opções do App"
         >
           <Grid className="w-5 h-5 stroke-[1.8px]" />

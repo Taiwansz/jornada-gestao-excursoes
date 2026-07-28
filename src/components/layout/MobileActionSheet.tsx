@@ -58,7 +58,8 @@ export const MobileActionSheet: React.FC<MobileActionSheetProps> = ({ isOpen, on
 
           <button 
             onClick={onClose}
-            className="p-1.5 text-white/70 hover:text-white rounded-full bg-white/10 transition-colors"
+            className="p-2.5 min-w-[42px] min-h-[42px] text-white/70 hover:text-white rounded-full bg-white/10 transition-colors flex items-center justify-center"
+            title="Fechar menu"
           >
             <X className="w-5 h-5" />
           </button>
