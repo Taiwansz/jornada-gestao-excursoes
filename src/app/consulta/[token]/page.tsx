@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { 
   CheckCircle2, 
@@ -12,7 +13,10 @@ import {
   ShieldCheck, 
   DollarSign, 
   MapPin, 
-  Calendar 
+  Calendar,
+  AlertTriangle,
+  FileText,
+  Printer
 } from 'lucide-react';
 
 import { LogoHorizontal, ChurchBrandHeader } from '@/components/brand/Logo';
@@ -45,6 +49,10 @@ export default function PublicPassengerLookupPage() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
+    loadData();
+  }, [token]);
+
+  const loadData = () => {
     setChurch(getInitialChurch());
     if (token) {
       const p = getPassengerByToken(token);
@@ -55,7 +63,7 @@ export default function PublicPassengerLookupPage() {
         setReceipts(getReceipts().filter(r => r.passenger_id === p.id));
       }
     }
-  }, [token]);
+  };
 
   const handleUploadReceipt = (paymentId: string) => {
     if (!file || !passenger || !excursion) return;
@@ -74,6 +82,7 @@ export default function PublicPassengerLookupPage() {
 
     setUploadSuccess(true);
     setFile(null);
+    loadData();
     setTimeout(() => setUploadSuccess(false), 4000);
   };
 
@@ -90,6 +99,12 @@ export default function PublicPassengerLookupPage() {
       </div>
     );
   }
+
+  const latestReceipt = receipts[0];
+  const isApproved = passenger.financial_status === 'pago' || latestReceipt?.review_status === 'approved';
+  const isRejected = latestReceipt?.review_status === 'rejected';
+  const isPending = latestReceipt?.review_status === 'pending';
+  const firstPayment = payments[0];
 
   return (
     <div className="min-h-screen bg-jornada-ivory py-8 px-4 sm:px-6">
@@ -114,13 +129,72 @@ export default function PublicPassengerLookupPage() {
               <div>Excursão: <strong className="text-jornada-navy">{excursion.name}</strong> ({excursion.destination})</div>
               <div>Embarque: <strong className="text-jornada-navy">{passenger.pickup_location}</strong></div>
               <div>Data da Viagem: <strong className="text-jornada-navy">{new Date(excursion.travel_date).toLocaleDateString('pt-BR')}</strong></div>
+              <div>Assento Atribuído: <strong className="text-jornada-navy">{passenger.seat_number || 'A ser definido no embarque'}</strong></div>
             </div>
           </div>
+
+          {/* ALERTA DE STATUS DO COMPROVANTE (Aprovado, Rejeitado, Pendente) */}
+          {isApproved && (
+            <div className="p-4 bg-jornada-green/10 border border-jornada-green/30 rounded-2xl text-jornada-green space-y-3">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-jornada-green shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-heading font-bold text-sm text-jornada-green">Comprovante Aprovado!</h4>
+                  <p className="font-body text-xs text-jornada-green/90 mt-0.5">
+                    Seu pagamento foi validado com sucesso pela comissão da igreja. Sua vaga está 100% confirmada!
+                  </p>
+                </div>
+              </div>
+
+              {firstPayment && (
+                <div className="pt-2 border-t border-jornada-green/20 flex justify-end">
+                  <Link href={`/recibo/${firstPayment.id}`}>
+                    <Button variant="accent" size="sm" icon={<Printer className="w-3.5 h-3.5" />}>
+                      Visualizar Recibo de Pagamento
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isRejected && (
+            <div className="p-4 bg-jornada-red/10 border border-jornada-red/30 rounded-2xl text-jornada-red space-y-2">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-jornada-red shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-heading font-bold text-sm text-jornada-red">Comprovante Rejeitado</h4>
+                  <p className="font-body text-xs text-jornada-red/90 mt-0.5">
+                    O comprovante enviado não pôde ser aprovado pela organização da igreja.
+                  </p>
+                  {latestReceipt?.review_notes && (
+                    <div className="mt-2 p-2.5 bg-white/80 rounded-xl border border-jornada-red/20 font-body text-xs font-semibold text-jornada-red">
+                      Motivo informado: "{latestReceipt.review_notes}"
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isPending && (
+            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-900 space-y-2">
+              <div className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-heading font-bold text-sm text-amber-900">Comprovante em Análise</h4>
+                  <p className="font-body text-xs text-amber-800 mt-0.5">
+                    Seu comprovante enviado em {new Date(latestReceipt.created_at).toLocaleDateString('pt-BR')} está sendo analisado pela tesouraria da igreja. Em breve seu status será atualizado.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Dados para Pagamento Pix */}
           {church?.pix_key && (
             <div className="p-4 bg-jornada-ivory rounded-xl border border-jornada-border space-y-2">
-              <span className="font-heading text-xs font-bold text-jornada-navy block">Chave Pix para Pagamento</span>
+              <span className="font-heading text-xs font-bold text-jornada-navy block">Chave Pix da Igreja</span>
               <div className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-jornada-border/80">
                 <code className="font-heading text-xs font-bold text-jornada-navy select-all">{church.pix_key}</code>
                 <span className="text-[10px] font-body text-jornada-muted">{church.pix_favored}</span>
@@ -128,7 +202,7 @@ export default function PublicPassengerLookupPage() {
             </div>
           )}
 
-          {/* Situação dos Pagamentos */}
+          {/* Situação dos Pagamentos & Anexo de Novo Comprovante */}
           <div className="space-y-3">
             <h3 className="font-heading font-bold text-sm text-jornada-navy">Situação dos Pagamentos</h3>
 
@@ -142,19 +216,19 @@ export default function PublicPassengerLookupPage() {
                   <Badge status={pay.status} />
                 </div>
 
-                {/* Upload de Comprovante */}
-                {pay.status !== 'pago' && (
+                {/* Upload de Comprovante (disponível se não pago ou se rejected) */}
+                {(pay.status !== 'pago' || isRejected) && (
                   <div className="pt-3 border-t border-jornada-border/60 space-y-2">
                     <label className="font-heading text-xs font-semibold text-jornada-navy block">
-                      Anexar Comprovante de Pagamento (Pix / Transferência)
+                      {isRejected ? 'Anexar Novo Comprovante Corrigido' : 'Anexar Comprovante de Pagamento (Pix / Transferência)'}
                     </label>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <input
                         type="file"
                         accept="image/*,application/pdf"
                         onChange={(e) => setFile(e.target.files?.[0] || null)}
-                        className="text-xs font-body text-jornada-navy file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-heading file:bg-jornada-navy file:text-white"
+                        className="text-xs font-body text-jornada-navy file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-heading file:bg-jornada-navy file:text-white"
                       />
                       {file && (
                         <Button
@@ -170,7 +244,7 @@ export default function PublicPassengerLookupPage() {
 
                     {uploadSuccess && (
                       <span className="font-body text-xs text-jornada-green font-semibold block">
-                        Comprovante enviado! Aguardando análise da organização.
+                        Comprovante enviado com sucesso! Aguardando análise da organização.
                       </span>
                     )}
                   </div>

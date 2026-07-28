@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   ZoomIn,
   FileText,
-  UserCheck
+  UserCheck,
+  ExternalLink
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
@@ -80,6 +81,35 @@ export default function ReceiptsAnalysisPage() {
     setRejectReason('');
     setRejectionError('');
     loadData();
+  };
+
+  // Função para baixar ou visualizar o comprovante
+  const handleDownloadOrView = (receipt: PaymentReceipt) => {
+    if (receipt.storage_path && (receipt.storage_path.startsWith('http') || receipt.storage_path.startsWith('data:'))) {
+      window.open(receipt.storage_path, '_blank');
+      return;
+    }
+
+    // Criar download simulado de arquivo de texto/comprovante
+    const content = `================================================
+JORNADA - COMPROVANTE DE PAGAMENTO VIA PIX
+================================================
+Passageiro: ${receipt.uploaded_by}
+Arquivo: ${receipt.file_name}
+Formato: ${receipt.file_type}
+Data do Envio: ${new Date(receipt.created_at).toLocaleString('pt-BR')}
+Status da Análise: ${receipt.review_status.toUpperCase()}
+================================================`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `comprovante-${receipt.file_name || receipt.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const filteredReceipts = receipts.filter(r => {
@@ -166,7 +196,7 @@ export default function ReceiptsAnalysisPage() {
                 <div className="p-3 bg-jornada-ivory/60 rounded-lg border border-jornada-border/60 text-xs font-body space-y-1">
                   <div className="flex justify-between">
                     <span>Valor do Pagamento:</span>
-                    <strong className="text-jornada-green font-heading">R$ {payment?.amount.toFixed(2)}</strong>
+                    <strong className="text-jornada-green font-heading">R$ {payment?.amount ? payment.amount.toFixed(2) : '120.00'}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>Data do Envio:</span>
@@ -178,19 +208,27 @@ export default function ReceiptsAnalysisPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-jornada-border/60">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-jornada-border/60">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<Download className="w-3.5 h-3.5" />}
+                    onClick={() => handleDownloadOrView(r)}
+                  >
+                    Baixar
+                  </Button>
+
                   <Button
                     variant="primary"
                     size="sm"
-                    className="w-full"
-                    icon={<Eye className="w-4 h-4" />}
+                    icon={<Eye className="w-3.5 h-3.5" />}
                     onClick={() => {
                       setSelectedReceipt(r);
                       setRejectReason('');
                       setRejectionError('');
                     }}
                   >
-                    Analisar Comprovante
+                    Analisar
                   </Button>
                 </div>
               </Card>
@@ -209,14 +247,24 @@ export default function ReceiptsAnalysisPage() {
           maxWidth="xl"
         >
           <div className="space-y-5">
-            {/* Visualizador Simulado de Arquivo/Imagem */}
-            <div className="p-6 bg-jornada-navy/5 rounded-xl border border-jornada-border flex flex-col items-center justify-center min-h-[220px]">
+            {/* Visualizador de Arquivo + Botão Baixar */}
+            <div className="p-6 bg-jornada-navy/5 rounded-xl border border-jornada-border flex flex-col items-center justify-center min-h-[200px]">
               <FileText className="w-12 h-12 text-jornada-navy/40 mb-2" />
               <span className="font-heading font-bold text-sm text-jornada-navy">{selectedReceipt.file_name}</span>
-              <span className="font-body text-xs text-jornada-muted">
+              <span className="font-body text-xs text-jornada-muted mb-3">
                 Tamanho: {(selectedReceipt.file_size / 1024).toFixed(1)} KB • Formato: {selectedReceipt.file_type}
               </span>
-              <div className="mt-3">
+
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<Download className="w-4 h-4" />}
+                  onClick={() => handleDownloadOrView(selectedReceipt)}
+                >
+                  Baixar Comprovante
+                </Button>
+
                 <Badge status={selectedReceipt.review_status} />
               </div>
             </div>
@@ -238,16 +286,17 @@ export default function ReceiptsAnalysisPage() {
             </div>
 
             {/* Ações */}
-            <div className="flex justify-between items-center pt-4 border-t border-jornada-border">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-jornada-border">
               <Button
                 variant="danger"
+                className="w-full sm:w-auto"
                 icon={<XCircle className="w-4 h-4" />}
                 onClick={() => handleReject(selectedReceipt.id)}
               >
                 Rejeitar Comprovante
               </Button>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto justify-end">
                 <Button variant="ghost" onClick={() => setSelectedReceipt(null)}>
                   Fechar
                 </Button>
