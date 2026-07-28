@@ -32,46 +32,56 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-jornada-border/80 shadow-lg px-2 py-1.5 pb-safe select-none">
-      <nav className="flex items-center justify-around max-w-md mx-auto">
+    <div className="lg:hidden fixed bottom-4 left-3 right-3 z-40 max-w-lg mx-auto select-none pointer-events-auto">
+      {/* Floating Capsule Dock (Estilo Thallium) */}
+      <nav className="bg-jornada-navy/95 backdrop-blur-xl text-white border border-white/15 shadow-2xl rounded-full p-1.5 flex items-center justify-between gap-1 ring-1 ring-black/20">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+
+          if (isActive) {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-2 bg-jornada-terracotta text-white rounded-full px-3.5 py-2 font-heading text-xs font-bold shadow-md transition-all duration-200 scale-105 shrink-0"
+              >
+                <Icon className="w-4 h-4 stroke-[2.5px]" />
+                <span className="tracking-tight">{item.label}</span>
+                {item.badge && item.badge > 0 ? (
+                  <span className="w-4 h-4 bg-white text-jornada-terracotta text-[9px] font-extrabold rounded-full flex items-center justify-center ml-0.5">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          }
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`relative flex flex-col items-center justify-center w-14 py-1 rounded-xl transition-all duration-150 active:scale-95 ${
-                isActive
-                  ? 'text-jornada-terracotta font-bold'
-                  : 'text-jornada-navy/70 hover:text-jornada-navy font-medium'
-              }`}
+              className="relative p-2.5 text-white/70 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
+              title={item.label}
             >
-              <div className="relative">
-                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} />
-                {item.badge && item.badge > 0 ? (
-                  <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-jornada-terracotta text-white font-heading text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
-                    {item.badge}
-                  </span>
-                ) : null}
-              </div>
-              <span className="font-heading text-[10px] mt-0.5 tracking-tight truncate max-w-full">
-                {item.label}
-              </span>
+              <Icon className="w-5 h-5 stroke-[1.8px]" />
+              {item.badge && item.badge > 0 ? (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-jornada-terracotta rounded-full ring-2 ring-jornada-navy" />
+              ) : null}
             </Link>
           );
         })}
 
+        {/* Separador Sutil */}
+        <div className="w-px h-5 bg-white/20 my-auto mx-0.5" />
+
         {/* Botão de Menu Mais */}
         <button
           onClick={onOpenMenu}
-          className="flex flex-col items-center justify-center w-14 py-1 text-jornada-navy/70 hover:text-jornada-navy active:scale-95 transition-all"
+          className="p-2.5 text-white/70 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
+          title="Menu Principal"
         >
           <Menu className="w-5 h-5 stroke-[1.8px]" />
-          <span className="font-heading text-[10px] mt-0.5 tracking-tight font-medium">
-            Menu
-          </span>
         </button>
       </nav>
     </div>

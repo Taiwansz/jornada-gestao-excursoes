@@ -62,13 +62,13 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
         {/* Sticky Header */}
         <Header onToggleMobileNav={() => setMobileNavOpen(!mobileNavOpen)} />
 
-        {/* Page Body with Mobile Bottom Padding */}
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full pb-24 lg:pb-8">
+        {/* Page Body with Thallium Dock Bottom Spacing */}
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full pb-28 lg:pb-8">
           {children}
         </main>
       </div>
 
-      {/* App Mobile Bottom Bar */}
+      {/* Thallium Style Floating Capsule Dock */}
       <MobileBottomBar 
         onOpenMenu={() => setMobileNavOpen(true)}
         pendingReceiptsCount={pendingReceiptsCount}
