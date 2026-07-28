@@ -14,7 +14,11 @@ import {
   ArrowRight,
   Bus,
   Users,
-  DollarSign
+  DollarSign,
+  Edit,
+  Clock,
+  MapPin,
+  Calendar
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
@@ -42,15 +46,24 @@ export default function ExcursionsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const [showModal, setShowModal] = useState(false);
+  const [editingExcursion, setEditingExcursion] = useState<Excursion | null>(null);
+
+  // Form states
   const [name, setName] = useState('');
   const [destination, setDestination] = useState('');
   const [travelDate, setTravelDate] = useState('');
+  const [departureTime, setDepartureTime] = useState('06:00');
+  const [returnDate, setReturnDate] = useState('');
+  const [returnTime, setReturnTime] = useState('18:00');
+  const [meetingTime, setMeetingTime] = useState('05:30');
   const [totalSeats, setTotalSeats] = useState(44);
   const [price, setPrice] = useState(120);
   const [leaderName, setLeaderName] = useState('');
   const [leaderPhone, setLeaderPhone] = useState('');
   const [pickup, setPickup] = useState('Frente da Igreja Sede');
   const [transportType, setTransportType] = useState('Ônibus Executivo');
+  const [status, setStatus] = useState<ExcursionStatus>('open');
+  const [description, setDescription] = useState('');
 
   useEffect(() => {
     loadExcursions();
@@ -60,7 +73,6 @@ export default function ExcursionsPage() {
     const list = getExcursions();
     setExcursions(list);
 
-    // Calcular ocupação por excursão
     const map: Record<string, number> = {};
     list.forEach(e => {
       const pass = getPassengers(e.id).filter(p => p.status !== 'cancelado');
@@ -69,24 +81,77 @@ export default function ExcursionsPage() {
     setPassengersMap(map);
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleOpenCreateModal = () => {
+    setEditingExcursion(null);
+    resetForm();
+    setShowModal(true);
+  };
+
+  const handleOpenEditModal = (exc: Excursion) => {
+    setEditingExcursion(exc);
+    setName(exc.name);
+    setDestination(exc.destination);
+    setTravelDate(exc.travel_date ? exc.travel_date.substring(0, 10) : '');
+    setDepartureTime(exc.departure_time || '06:00');
+    setReturnDate(exc.return_date ? exc.return_date.substring(0, 10) : '');
+    setReturnTime(exc.return_time || '18:00');
+    setMeetingTime(exc.meeting_time || '05:30');
+    setTotalSeats(exc.total_seats);
+    setPrice(exc.price_per_passenger);
+    setLeaderName(exc.leader_name || '');
+    setLeaderPhone(exc.leader_phone || '');
+    setPickup(exc.main_pickup_location || 'Frente da Igreja Sede');
+    setTransportType(exc.transport_type || 'Ônibus Executivo');
+    setStatus(exc.status || 'open');
+    setDescription(exc.description || exc.notes || '');
+    setShowModal(true);
+  };
+
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const church = getInitialChurch();
 
-    saveExcursion({
-      name,
-      destination,
-      travel_date: travelDate,
-      total_seats: Number(totalSeats),
-      price_per_passenger: Number(price),
-      leader_name: leaderName || church.main_responsible || 'Organizador',
-      leader_phone: leaderPhone || church.phone || '',
-      main_pickup_location: pickup,
-      additional_pickups: [],
-      transport_type: transportType,
-      status: 'open',
-      requires_manual_approval: true
-    });
+    if (editingExcursion) {
+      updateExcursion(editingExcursion.id, {
+        name,
+        destination,
+        travel_date: travelDate,
+        departure_time: departureTime,
+        return_date: returnDate || travelDate,
+        return_time: returnTime,
+        meeting_time: meetingTime,
+        total_seats: Number(totalSeats),
+        price_per_passenger: Number(price),
+        leader_name: leaderName || church.main_responsible || 'Organizador',
+        leader_phone: leaderPhone || church.phone || '',
+        main_pickup_location: pickup,
+        transport_type: transportType,
+        status,
+        description,
+        notes: description
+      });
+    } else {
+      saveExcursion({
+        name,
+        destination,
+        travel_date: travelDate,
+        departure_time: departureTime,
+        return_date: returnDate || travelDate,
+        return_time: returnTime,
+        meeting_time: meetingTime,
+        total_seats: Number(totalSeats),
+        price_per_passenger: Number(price),
+        leader_name: leaderName || church.main_responsible || 'Organizador',
+        leader_phone: leaderPhone || church.phone || '',
+        main_pickup_location: pickup,
+        additional_pickups: [],
+        transport_type: transportType,
+        status,
+        description,
+        notes: description,
+        requires_manual_approval: true
+      });
+    }
 
     setShowModal(false);
     resetForm();
@@ -97,17 +162,22 @@ export default function ExcursionsPage() {
     setName('');
     setDestination('');
     setTravelDate('');
+    setDepartureTime('06:00');
+    setReturnDate('');
+    setReturnTime('18:00');
+    setMeetingTime('05:30');
     setTotalSeats(44);
     setPrice(120);
+    setLeaderName('');
+    setLeaderPhone('');
+    setPickup('Frente da Igreja Sede');
+    setTransportType('Ônibus Executivo');
+    setStatus('open');
+    setDescription('');
   };
 
   const handleDuplicate = (id: string) => {
     duplicateExcursion(id);
-    loadExcursions();
-  };
-
-  const handleStatusChange = (id: string, status: ExcursionStatus) => {
-    updateExcursion(id, { status });
     loadExcursions();
   };
 
@@ -134,7 +204,7 @@ export default function ExcursionsPage() {
         <Button 
           variant="accent" 
           icon={<PlusCircle className="w-4 h-4" />}
-          onClick={() => setShowModal(true)}
+          onClick={handleOpenCreateModal}
         >
           Nova Excursão
         </Button>
@@ -158,111 +228,118 @@ export default function ExcursionsPage() {
               { label: 'Todas as Situações', value: 'all' },
               { label: 'Inscrições Abertas', value: 'open' },
               { label: 'Esgotadas', value: 'full' },
-              { label: 'Concluídas', value: 'completed' },
+              { label: 'Realizadas', value: 'completed' },
               { label: 'Rascunho', value: 'draft' },
-              { label: 'Canceladas / Arquivadas', value: 'cancelled' },
+              { label: 'Canceladas', value: 'cancelled' },
             ]}
           />
         </div>
       </div>
 
-      {/* Lista de Excursões */}
+      {/* Lista de Cards de Excursão */}
       {filteredExcursions.length === 0 ? (
         <EmptyState
-          icon={<Compass className="w-8 h-8 text-jornada-terracotta" />}
           title="Nenhuma excursão encontrada"
-          description={search ? "Nenhum resultado corresponde à sua busca." : "Sua igreja ainda não possui excursões cadastradas."}
-          actionLabel="Criar Nova Excursão"
-          onAction={() => setShowModal(true)}
+          description="Cadastre sua primeira viagem ou modifique os termos de busca acima."
+          actionLabel="Cadastrar Excursão"
+          onAction={handleOpenCreateModal}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {filteredExcursions.map((excursion) => {
-            const occupied = passengersMap[excursion.id] || 0;
-            const percent = Math.round((occupied / excursion.total_seats) * 100);
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredExcursions.map((exc) => {
+            const occupied = passengersMap[exc.id] || 0;
+            const pct = Math.min(100, Math.round((occupied / exc.total_seats) * 100));
 
             return (
-              <div 
-                key={excursion.id} 
-                className="bg-white rounded-xl border border-jornada-border/80 p-5 hover:border-jornada-navy/50 transition-all shadow-xs"
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                  {/* Left Info */}
-                  <div className="space-y-2 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-heading font-bold text-lg text-jornada-navy tracking-tight">
-                        {excursion.name}
-                      </h3>
-                      <Badge status={excursion.status} />
-                      <span className="text-[11px] font-heading font-semibold bg-jornada-ivory text-jornada-navy px-2.5 py-0.5 rounded border border-jornada-border">
-                        {excursion.transport_type}
+              <Card key={exc.id} className="flex flex-col justify-between hover:border-jornada-navy/40 transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-heading font-bold text-lg text-jornada-navy tracking-tight line-clamp-1">
+                      {exc.name}
+                    </h3>
+                    <Badge status={exc.status} />
+                  </div>
+
+                  <div className="space-y-1.5 text-xs text-jornada-muted font-body">
+                    <div className="flex items-center gap-2">
+                      <Compass className="w-3.5 h-3.5 text-jornada-terracotta shrink-0" />
+                      <span className="font-semibold text-jornada-navy truncate">{exc.destination}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-jornada-navy shrink-0" />
+                      <span>
+                        {new Date(exc.travel_date).toLocaleDateString('pt-BR')}
+                        {exc.departure_time ? ` às ${exc.departure_time}` : ''}
                       </span>
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-body text-jornada-muted">
-                      <div>Destino: <strong className="text-jornada-navy">{excursion.destination}</strong></div>
-                      <div>Data: <strong className="text-jornada-navy">{new Date(excursion.travel_date).toLocaleDateString('pt-BR')}</strong></div>
-                      <div>Valor: <strong className="text-jornada-green">R$ {excursion.price_per_passenger.toFixed(2)}</strong></div>
+                    <div className="flex items-center gap-2">
+                      <Bus className="w-3.5 h-3.5 text-jornada-navy shrink-0" />
+                      <span>{exc.transport_type || 'Ônibus Executivo'}</span>
                     </div>
-
-                    <div className="text-xs font-body text-jornada-muted">
-                      Embarque Principal: <strong className="text-jornada-navy">{excursion.main_pickup_location}</strong>
-                      {excursion.leader_name && (
-                        <span> • Responsável: <strong className="text-jornada-navy">{excursion.leader_name}</strong> ({excursion.leader_phone})</span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-3.5 h-3.5 text-jornada-green shrink-0" />
+                      <span className="font-bold text-jornada-green">R$ {exc.price_per_passenger.toFixed(2)} por pessoa</span>
                     </div>
                   </div>
 
-                  {/* Right Progress & Actions */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 border-t lg:border-t-0 border-jornada-border/50 pt-4 lg:pt-0">
-                    <div className="w-full sm:w-44">
-                      <div className="flex justify-between text-xs font-heading font-bold mb-1">
-                        <span className="text-jornada-navy">{occupied} / {excursion.total_seats} vagas</span>
-                        <span className="text-jornada-muted">{percent}%</span>
-                      </div>
-                      <div className="w-full bg-jornada-ivory rounded-full h-2.5 overflow-hidden border border-jornada-border/60">
-                        <div 
-                          className={`h-full rounded-full transition-all ${percent >= 90 ? 'bg-jornada-terracotta' : 'bg-jornada-navy'}`}
-                          style={{ width: `${Math.min(100, percent)}%` }}
-                        />
-                      </div>
+                  {/* Barra de Ocupação dos Assentos */}
+                  <div className="pt-2 space-y-1">
+                    <div className="flex justify-between text-[11px] font-heading font-semibold text-jornada-navy">
+                      <span>Ocupação ({occupied}/{exc.total_seats} vagas)</span>
+                      <span>{pct}%</span>
                     </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <Link href={`/excursoes/${excursion.id}`} className="w-full sm:w-auto">
-                        <Button variant="primary" size="md" icon={<ArrowRight className="w-4 h-4" />}>
-                          Abrir Painel
-                        </Button>
-                      </Link>
-
-                      <button
-                        onClick={() => handleDuplicate(excursion.id)}
-                        className="p-2 text-jornada-muted hover:text-jornada-navy hover:bg-jornada-ivory rounded-lg border border-jornada-border/60 transition-colors"
-                        title="Duplicar Excursão"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
+                    <div className="w-full h-2 bg-jornada-ivory rounded-full overflow-hidden border border-jornada-border">
+                      <div 
+                        className={`h-full transition-all duration-300 ${pct >= 100 ? 'bg-jornada-red' : pct >= 80 ? 'bg-jornada-terracotta' : 'bg-jornada-green'}`} 
+                        style={{ width: `${pct}%` }} 
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
+
+                <div className="pt-5 border-t border-jornada-border/60 mt-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => handleOpenEditModal(exc)}
+                      className="p-2 text-jornada-navy hover:bg-jornada-ivory rounded-lg transition-colors flex items-center gap-1 text-xs font-heading font-semibold"
+                      title="Editar Informações"
+                    >
+                      <Edit className="w-3.5 h-3.5 text-jornada-terracotta" />
+                      <span>Editar</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDuplicate(exc.id)}
+                      className="p-2 text-jornada-muted hover:text-jornada-navy hover:bg-jornada-ivory rounded-lg transition-colors"
+                      title="Duplicar Excursão"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <Link href={`/excursoes/${exc.id}`}>
+                    <Button variant="outline" size="sm" icon={<ArrowRight className="w-3.5 h-3.5" />}>
+                      Painel Completo
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
             );
           })}
         </div>
       )}
 
-      {/* Modal de Criação Completa de Excursão */}
+      {/* Modal de Criação / Edição de Excursão */}
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title="Cadastrar Nova Excursão"
-        subtitle="Preencha os campos para iniciar a gestão do transporte e inscrições."
+        title={editingExcursion ? "Editar Excursão" : "Cadastrar Nova Excursão"}
+        subtitle={editingExcursion ? "Modifique os dados da viagem abaixo." : "Preencha as informações gerais da nova viagem da sua igreja."}
         maxWidth="xl"
       >
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-4">
           <Input
             label="Nome da Excursão"
-            placeholder="Ex: Retiro Espiritual 2026 / Viagem da Mocidade"
+            placeholder="Ex: Retiro de Jovens 2026 / Viagem à Sede"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -270,73 +347,114 @@ export default function ExcursionsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
-              label="Destino / Cidade"
-              placeholder="Ex: Águas de Lindoia - SP"
+              label="Cidade de Destino"
+              placeholder="Ex: Serra Negra / Aparecida"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
               required
             />
-
             <Input
-              label="Data da Viagem"
+              label="Ponto/Local Principal de Embarque"
+              placeholder="Ex: Frente da Igreja Sede"
+              value={pickup}
+              onChange={(e) => setPickup(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Input
+              label="Data de Saída"
               type="date"
               value={travelDate}
               onChange={(e) => setTravelDate(e.target.value)}
               required
             />
+            <Input
+              label="Horário de Saída"
+              type="time"
+              value={departureTime}
+              onChange={(e) => setDepartureTime(e.target.value)}
+            />
+            <Input
+              label="Data de Retorno"
+              type="date"
+              value={returnDate}
+              onChange={(e) => setReturnDate(e.target.value)}
+            />
+            <Input
+              label="Horário de Retorno"
+              type="time"
+              value={returnTime}
+              onChange={(e) => setReturnTime(e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Select
-              label="Tipo de Transporte"
-              value={transportType}
-              onChange={(e) => setTransportType(e.target.value)}
-              options={[
-                { label: 'Ônibus Executivo (46-50 lugares)', value: 'Ônibus Executivo' },
-                { label: 'Micro-ônibus (28-32 lugares)', value: 'Micro-ônibus' },
-                { label: 'Van (15-20 lugares)', value: 'Van' },
-                { label: 'Veículos Próprios / Comboio', value: 'Veículos Próprios' },
-              ]}
-            />
-
             <Input
-              label="Número Total de Vagas"
-              type="number"
-              value={totalSeats}
-              onChange={(e) => setTotalSeats(Number(e.target.value))}
-              required
-            />
-
-            <Input
-              label="Valor Padrão por Passageiro (R$)"
+              label="Valor por Pessoa (R$)"
               type="number"
               value={price}
               onChange={(e) => setPrice(Number(e.target.value))}
               required
             />
+            <Input
+              label="Total de Vagas / Assentos"
+              type="number"
+              value={totalSeats}
+              onChange={(e) => setTotalSeats(Number(e.target.value))}
+              required
+            />
+            <Select
+              label="Tipo de Transporte"
+              value={transportType}
+              onChange={(e) => setTransportType(e.target.value)}
+              options={[
+                { label: 'Ônibus Executivo (44-50 assentos)', value: 'Ônibus Executivo' },
+                { label: 'Micro-ônibus (24-32 assentos)', value: 'Micro-ônibus' },
+                { label: 'Van (15-20 assentos)', value: 'Van' },
+                { label: 'Veículos Próprios / Comboio', value: 'Veículos Próprios' },
+              ]}
+            />
           </div>
 
-          <Input
-            label="Local Principal de Embarque"
-            placeholder="Ex: Frente da Igreja Sede - Av. Principal, 1000"
-            value={pickup}
-            onChange={(e) => setPickup(e.target.value)}
-            required
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Input
-              label="Nome do Responsável / Líder"
-              placeholder="Ex: Ir. Marcos ou Pr. Carlos"
+              label="Nome do Líder Responsável"
+              placeholder="Ex: Irmão João Silva"
               value={leaderName}
               onChange={(e) => setLeaderName(e.target.value)}
             />
-
             <Input
               label="Telefone do Responsável"
               placeholder="(11) 98765-4321"
               value={leaderPhone}
               onChange={(e) => setLeaderPhone(e.target.value)}
+            />
+            <Select
+              label="Situação / Status da Excursão"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as ExcursionStatus)}
+              options={[
+                { label: 'Inscrições Abertas', value: 'open' },
+                { label: 'Esgotada', value: 'full' },
+                { label: 'Rascunho', value: 'draft' },
+                { label: 'Realizada', value: 'completed' },
+                { label: 'Cancelada', value: 'cancelled' },
+              ]}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-heading font-semibold text-jornada-navy mb-1">
+              Observações & Instruções aos Passageiros
+            </label>
+            <textarea
+              className="w-full p-2.5 rounded-xl border border-jornada-border text-xs font-body text-jornada-navy focus:outline-hidden focus:ring-2 focus:ring-jornada-navy"
+              rows={3}
+              placeholder="Instruções sobre bagagem, alimentação, documentos necessários..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
@@ -345,7 +463,7 @@ export default function ExcursionsPage() {
               Cancelar
             </Button>
             <Button type="submit" variant="accent">
-              Salvar Excursão
+              {editingExcursion ? "Salvar Alterações" : "Criar Excursão"}
             </Button>
           </div>
         </form>

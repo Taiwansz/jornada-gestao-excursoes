@@ -66,6 +66,7 @@ export interface Excursion {
   destination: string;
   destination_address?: string;
   travel_date: string;
+  return_date?: string;
   meeting_time?: string;
   departure_time?: string;
   return_time?: string;

@@ -542,6 +542,17 @@ export function saveExpense(data: Omit<Expense, 'id' | 'church_id' | 'created_at
   return newExpense;
 }
 
+export function updateExpense(id: string, data: Partial<Expense>): Expense | null {
+  const expenses = getStored<Expense[]>(KEYS.EXPENSES, []);
+  const index = expenses.findIndex(e => e.id === id);
+  if (index === -1) return null;
+
+  expenses[index] = { ...expenses[index], ...data };
+  setStored(KEYS.EXPENSES, expenses);
+  addAuditLog(`Despesa atualizada: ${expenses[index].description}`, 'expense', id);
+  return expenses[index];
+}
+
 export function deleteExpense(id: string): void {
   let expenses = getStored<Expense[]>(KEYS.EXPENSES, []);
   expenses = expenses.filter(e => e.id !== id);
