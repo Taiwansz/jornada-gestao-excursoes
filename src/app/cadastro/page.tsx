@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Phone, Church as ChurchIcon, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { User, Mail, Phone, Church as ChurchIcon, Lock, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { LogoHorizontal } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [churchName, setChurchName] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +42,13 @@ export default function SignupPage() {
       });
 
       setCurrentUser(user);
-      setLoading(false);
+      setSuccessMsg('Conta criada com sucesso! Redirecionando para o painel...');
 
-      // Redirecionar para o dashboard principal
-      router.push('/');
-    }, 600);
+      setTimeout(() => {
+        setLoading(false);
+        router.push('/dashboard');
+      }, 500);
+    }, 400);
   };
 
   return (
@@ -66,6 +69,13 @@ export default function SignupPage() {
               Cadastre sua organização e comece a gerenciar suas excursões de forma organizada.
             </p>
           </div>
+
+          {successMsg && (
+            <div className="mb-4 p-3 rounded-lg bg-jornada-green/10 border border-jornada-green/20 text-jornada-green text-xs font-body font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
 
           <form onSubmit={handleSignup} className="space-y-4">
             <Input
@@ -137,8 +147,9 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <div className="mt-6 text-center text-jornada-muted text-[11px] font-body">
-          Ao cadastrar, você confirma que possui autorização para gerenciar a igreja informada.
+        <div className="mt-6 text-center text-jornada-muted text-[11px] font-body flex items-center justify-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-jornada-green" />
+          <span>Ao cadastrar, você confirma autorização para gerenciar a igreja informada.</span>
         </div>
       </div>
     </div>

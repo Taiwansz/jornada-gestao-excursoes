@@ -2,51 +2,52 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useRouter as useAppRouter } from 'next/navigation';
-import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Lock, Mail, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { LogoHorizontal } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { setCurrentUser, getChurchUsers } from '@/lib/store';
+import { setCurrentUser, getChurchUsers, saveChurchUser } from '@/lib/store';
 
 export default function LoginPage() {
-  const router = useAppRouter();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     setTimeout(() => {
-      // Procurar usuário cadastrado no sistema
+      // Procurar se já existe um usuário com este email
       const users = getChurchUsers();
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      let user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-      if (user) {
-        setCurrentUser(user);
-      } else {
-        // Criar ou logar perfil padrão admin
-        setCurrentUser({
-          id: 'user-admin-1',
+      if (!user) {
+        // Se não existir, registrar automaticamente o perfil de admin
+        user = saveChurchUser({
           church_id: 'church-1',
-          full_name: email.split('@')[0] || 'Administrador',
+          full_name: email.split('@')[0] ? email.split('@')[0].replace('.', ' ') : 'Administrador',
           email: email || 'admin@igreja.org.br',
           phone: '(11) 99999-8888',
           role: 'admin',
-          status: 'active',
-          created_at: new Date().toISOString()
+          status: 'active'
         });
       }
 
-      setLoading(false);
-      router.push('/');
-    }, 600);
+      // Definir como usuário ativo na sessão
+      setCurrentUser(user);
+
+      setSuccessMsg('Login realizado com sucesso! Redirecionando...');
+      
+      setTimeout(() => {
+        setLoading(false);
+        router.push('/dashboard');
+      }, 500);
+    }, 400);
   };
 
   return (
@@ -68,9 +69,10 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-jornada-red/10 border border-jornada-red/20 text-jornada-red text-xs font-body font-medium">
-              {error}
+          {successMsg && (
+            <div className="mb-4 p-3 rounded-lg bg-jornada-green/10 border border-jornada-green/20 text-jornada-green text-xs font-body font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{successMsg}</span>
             </div>
           )}
 
