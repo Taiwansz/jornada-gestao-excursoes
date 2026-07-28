@@ -32,9 +32,9 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-4 left-3 right-3 z-40 max-w-lg mx-auto select-none pointer-events-auto">
-      {/* Floating Capsule Dock (Estilo Thallium) */}
-      <nav className="bg-jornada-navy/95 backdrop-blur-xl text-white border border-white/15 shadow-2xl rounded-full p-1.5 flex items-center justify-between gap-1 ring-1 ring-black/20">
+    <div className="lg:hidden fixed bottom-4 left-3 right-3 z-40 max-w-md mx-auto select-none pointer-events-auto">
+      {/* Thallium Design System - Floating Capsule Dock (#09090b surface with #27272a border) */}
+      <nav className="bg-[#09090b]/95 backdrop-blur-xl text-[#fafafa] border border-[#27272a] shadow-2xl rounded-full p-1.5 flex items-center justify-between gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
@@ -44,12 +44,12 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-2 bg-jornada-terracotta text-white rounded-full px-3.5 py-2 font-heading text-xs font-bold shadow-md transition-all duration-200 scale-105 shrink-0"
+                className="flex items-center gap-1.5 bg-[#C45D3C] text-white rounded-full px-3.5 py-1.5 font-heading text-[11px] font-bold shadow-xs transition-all duration-200 shrink-0"
               >
-                <Icon className="w-4 h-4 stroke-[2.5px]" />
+                <Icon className="w-4 h-4 stroke-[2.2px]" />
                 <span className="tracking-tight">{item.label}</span>
                 {item.badge && item.badge > 0 ? (
-                  <span className="w-4 h-4 bg-white text-jornada-terracotta text-[9px] font-extrabold rounded-full flex items-center justify-center ml-0.5">
+                  <span className="w-4 h-4 bg-white text-[#C45D3C] text-[9px] font-extrabold rounded-full flex items-center justify-center ml-0.5">
                     {item.badge}
                   </span>
                 ) : null}
@@ -61,27 +61,27 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
             <Link
               key={item.href}
               href={item.href}
-              className="relative p-2.5 text-white/70 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
+              className="relative p-2 text-[#a1a1aa] hover:text-[#fafafa] active:scale-95 transition-all rounded-full flex items-center justify-center shrink-0"
               title={item.label}
             >
-              <Icon className="w-5 h-5 stroke-[1.8px]" />
+              <Icon className="w-5 h-5 stroke-[1.75px]" />
               {item.badge && item.badge > 0 ? (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-jornada-terracotta rounded-full ring-2 ring-jornada-navy" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-[#C45D3C] rounded-full ring-2 ring-[#09090b]" />
               ) : null}
             </Link>
           );
         })}
 
-        {/* Separador Sutil */}
-        <div className="w-px h-5 bg-white/20 my-auto mx-0.5" />
+        {/* Separador Sutil Thallium (#27272a) */}
+        <div className="w-px h-4 bg-[#27272a] my-auto mx-0.5" />
 
         {/* Botão de Menu Mais */}
         <button
           onClick={onOpenMenu}
-          className="p-2.5 text-white/70 hover:text-white active:scale-90 transition-all rounded-full flex items-center justify-center shrink-0"
+          className="p-2 text-[#a1a1aa] hover:text-[#fafafa] active:scale-95 transition-all rounded-full flex items-center justify-center shrink-0"
           title="Menu Principal"
         >
-          <Menu className="w-5 h-5 stroke-[1.8px]" />
+          <Menu className="w-5 h-5 stroke-[1.75px]" />
         </button>
       </nav>
     </div>
