@@ -26,8 +26,9 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
     setPendingReceiptsCount(recs.length);
   }, []);
 
-  // Rotas públicas sem navegação do app
+  // Rotas públicas que não exibem a estrutura interna administrativa
   const isPublicRoute = 
+    pathname === '/' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/cadastro') ||
     pathname.startsWith('/recuperar-senha') ||
@@ -59,7 +60,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
         onClose={() => setMobileNavOpen(false)} 
       />
 
-      {/* Mobile App Native Action Sheet (Substitui menu lateral no celular) */}
+      {/* Mobile App Native Action Sheet */}
       <MobileActionSheet
         isOpen={actionSheetOpen}
         onClose={() => setActionSheetOpen(false)}

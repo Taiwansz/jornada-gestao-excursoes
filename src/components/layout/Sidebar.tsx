@@ -28,7 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const user = getCurrentUser();
 
   const navItems = [
-    { label: 'Início', href: '/', icon: Home },
+    { label: 'Painel Geral', href: '/dashboard', icon: Home },
     { label: 'Excursões', href: '/excursoes', icon: Compass },
     { label: 'Passageiros', href: '/passageiros', icon: Users },
     { label: 'Financeiro', href: '/financeiro', icon: DollarSign },

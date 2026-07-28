@@ -24,7 +24,7 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
   const pathname = usePathname();
 
   const navItems = [
-    { label: 'Início', href: '/', icon: Home },
+    { label: 'Painel', href: '/dashboard', icon: Home },
     { label: 'Excursões', href: '/excursoes', icon: Compass },
     { label: 'Passageiros', href: '/passageiros', icon: Users },
     { label: 'Financeiro', href: '/financeiro', icon: DollarSign },
