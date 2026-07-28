@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { MobileNav } from './MobileNav';
 import { MobileBottomBar } from './MobileBottomBar';
+import { MobileActionSheet } from './MobileActionSheet';
 import { getReceipts } from '@/lib/store';
 
 interface LayoutWrapperProps {
@@ -15,6 +16,7 @@ interface LayoutWrapperProps {
 export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pendingReceiptsCount, setPendingReceiptsCount] = useState(0);
 
@@ -51,26 +53,32 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
       {/* Desktop Sidebar */}
       <Sidebar />
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Drawer (apenas acessado via topo se necessário) */}
       <MobileNav 
         isOpen={mobileNavOpen} 
         onClose={() => setMobileNavOpen(false)} 
       />
 
+      {/* Mobile App Native Action Sheet (Substitui menu lateral no celular) */}
+      <MobileActionSheet
+        isOpen={actionSheetOpen}
+        onClose={() => setActionSheetOpen(false)}
+      />
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
         {/* Sticky Header */}
-        <Header onToggleMobileNav={() => setMobileNavOpen(!mobileNavOpen)} />
+        <Header onToggleMobileNav={() => setActionSheetOpen(true)} />
 
-        {/* Page Body with Thallium Dock Bottom Spacing */}
+        {/* Page Body with Spacing for Liquid Glass Dock */}
         <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full pb-28 lg:pb-8">
           {children}
         </main>
       </div>
 
-      {/* Thallium Style Floating Capsule Dock */}
+      {/* Liquid Glass Capsule Dock */}
       <MobileBottomBar 
-        onOpenMenu={() => setMobileNavOpen(true)}
+        onOpenActionSheet={() => setActionSheetOpen(true)}
         pendingReceiptsCount={pendingReceiptsCount}
       />
     </div>
