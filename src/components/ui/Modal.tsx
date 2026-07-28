@@ -35,27 +35,32 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   const widthClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl'
+    sm: 'sm:max-w-sm',
+    md: 'sm:max-w-md',
+    lg: 'sm:max-w-lg',
+    xl: 'sm:max-w-xl',
+    '2xl': 'sm:max-w-2xl'
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-jornada-navy/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-jornada-navy/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
         className="fixed inset-0" 
         onClick={onClose} 
         aria-hidden="true" 
       />
+      
+      {/* Bottom Sheet no Celular, Modal no Desktop */}
       <div 
-        className={`relative w-full ${widthClasses[maxWidth]} bg-white rounded-xl shadow-xl border border-jornada-border overflow-hidden z-10 my-8 flex flex-col max-h-[90vh]`}
+        className={`relative w-full ${widthClasses[maxWidth]} bg-white rounded-t-2xl sm:rounded-xl shadow-2xl border border-jornada-border overflow-hidden z-10 my-0 sm:my-8 flex flex-col max-h-[90vh] sm:max-h-[85vh] transition-transform duration-200 animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0`}
       >
+        {/* Handle visual no topo do cel (Bottom Sheet Indicator) */}
+        <div className="w-12 h-1 bg-jornada-border rounded-full mx-auto my-2 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-4 border-b border-jornada-border bg-jornada-ivory/40">
+        <div className="flex items-start justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-jornada-border bg-jornada-ivory/40">
           <div>
-            <h2 className="font-heading font-bold text-lg text-jornada-navy tracking-tight">
+            <h2 className="font-heading font-bold text-base sm:text-lg text-jornada-navy tracking-tight">
               {title}
             </h2>
             {subtitle && (
@@ -66,7 +71,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-jornada-muted hover:text-jornada-navy rounded-lg hover:bg-jornada-ivory transition-colors"
+            className="p-1.5 text-jornada-muted hover:text-jornada-navy rounded-lg hover:bg-jornada-ivory transition-colors"
             aria-label="Fechar"
           >
             <X className="w-5 h-5" />
@@ -74,7 +79,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto font-body text-sm text-jornada-navy">
+        <div className="p-5 sm:p-6 overflow-y-auto font-body text-sm text-jornada-navy pb-safe">
           {children}
         </div>
       </div>
