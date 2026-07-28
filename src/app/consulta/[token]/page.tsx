@@ -68,22 +68,28 @@ export default function PublicPassengerLookupPage() {
   const handleUploadReceipt = (paymentId: string) => {
     if (!file || !passenger || !excursion) return;
 
-    saveReceipt({
-      payment_id: paymentId,
-      passenger_id: passenger.id,
-      excursion_id: excursion.id,
-      storage_path: `receipts/${passenger.id}/${file.name}`,
-      file_name: file.name,
-      file_type: file.type || 'image/png',
-      file_size: file.size,
-      uploaded_by: passenger.full_name,
-      review_status: 'pending'
-    });
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = (e.target?.result as string) || '';
 
-    setUploadSuccess(true);
-    setFile(null);
-    loadData();
-    setTimeout(() => setUploadSuccess(false), 4000);
+      saveReceipt({
+        payment_id: paymentId,
+        passenger_id: passenger.id,
+        excursion_id: excursion.id,
+        storage_path: dataUrl,
+        file_name: file.name,
+        file_type: file.type || 'image/png',
+        file_size: file.size,
+        uploaded_by: passenger.full_name,
+        review_status: 'pending'
+      });
+
+      setUploadSuccess(true);
+      setFile(null);
+      loadData();
+      setTimeout(() => setUploadSuccess(false), 4000);
+    };
+    reader.readAsDataURL(file);
   };
 
   if (!passenger || !excursion) {

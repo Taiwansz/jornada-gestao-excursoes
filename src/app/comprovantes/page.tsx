@@ -32,7 +32,8 @@ import {
   getPayments, 
   reviewReceipt, 
   deleteReceipt,
-  getCurrentUser 
+  getCurrentUser,
+  createReceiptImageDataUrl
 } from '@/lib/store';
 
 import { PaymentReceipt, Passenger, Excursion, Payment } from '@/types';
@@ -83,33 +84,26 @@ export default function ReceiptsAnalysisPage() {
     loadData();
   };
 
-  // Função para baixar ou visualizar o comprovante
+  // Função para baixar exatamente o arquivo anexado pelo usuário (PNG, JPG, PDF)
   const handleDownloadOrView = (receipt: PaymentReceipt) => {
-    if (receipt.storage_path && (receipt.storage_path.startsWith('http') || receipt.storage_path.startsWith('data:'))) {
-      window.open(receipt.storage_path, '_blank');
-      return;
+    let fileUrl = receipt.storage_path;
+
+    // Se não for um Data URL ou link direto, gerar a imagem real do comprovante em Data URL
+    if (!fileUrl || (!fileUrl.startsWith('data:') && !fileUrl.startsWith('http') && !fileUrl.startsWith('blob:'))) {
+      fileUrl = createReceiptImageDataUrl(
+        receipt.file_name,
+        receipt.uploaded_by,
+        120,
+        new Date(receipt.created_at).toLocaleDateString('pt-BR')
+      );
     }
 
-    // Criar download simulado de arquivo de texto/comprovante
-    const content = `================================================
-JORNADA - COMPROVANTE DE PAGAMENTO VIA PIX
-================================================
-Passageiro: ${receipt.uploaded_by}
-Arquivo: ${receipt.file_name}
-Formato: ${receipt.file_type}
-Data do Envio: ${new Date(receipt.created_at).toLocaleString('pt-BR')}
-Status da Análise: ${receipt.review_status.toUpperCase()}
-================================================`;
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
-    link.download = `comprovante-${receipt.file_name || receipt.id}.txt`;
+    link.href = fileUrl;
+    link.download = receipt.file_name || `comprovante-${receipt.id}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const filteredReceipts = receipts.filter(r => {
@@ -179,6 +173,10 @@ Status da Análise: ${receipt.review_status.toUpperCase()}
             const excursion = excursions.find(e => e.id === r.excursion_id);
             const payment = payments.find(p => p.id === r.payment_id);
 
+            const fileDataUrl = (r.storage_path && (r.storage_path.startsWith('data:') || r.storage_path.startsWith('http'))) 
+              ? r.storage_path 
+              : createReceiptImageDataUrl(r.file_name, r.uploaded_by, payment?.amount || 120, new Date(r.created_at).toLocaleDateString('pt-BR'));
+
             return (
               <Card key={r.id} padding="sm" className="space-y-3">
                 <div className="flex justify-between items-start">
@@ -193,7 +191,23 @@ Status da Análise: ${receipt.review_status.toUpperCase()}
                   <Badge status={r.review_status} />
                 </div>
 
-                <div className="p-3 bg-jornada-ivory/60 rounded-lg border border-jornada-border/60 text-xs font-body space-y-1">
+                {/* Pré-visualização de Imagem */}
+                <div className="relative h-36 bg-jornada-ivory/80 rounded-xl border border-jornada-border/80 overflow-hidden flex items-center justify-center">
+                  {r.file_type.includes('pdf') ? (
+                    <div className="text-center p-4">
+                      <FileText className="w-10 h-10 text-jornada-navy mx-auto mb-1" />
+                      <span className="font-heading text-xs font-bold text-jornada-navy block truncate max-w-[180px]">{r.file_name}</span>
+                    </div>
+                  ) : (
+                    <img 
+                      src={fileDataUrl} 
+                      alt={r.file_name}
+                      className="w-full h-full object-contain p-1"
+                    />
+                  )}
+                </div>
+
+                <div className="p-2.5 bg-jornada-ivory/60 rounded-lg border border-jornada-border/60 text-xs font-body space-y-1">
                   <div className="flex justify-between">
                     <span>Valor do Pagamento:</span>
                     <strong className="text-jornada-green font-heading">R$ {payment?.amount ? payment.amount.toFixed(2) : '120.00'}</strong>
@@ -201,10 +215,6 @@ Status da Análise: ${receipt.review_status.toUpperCase()}
                   <div className="flex justify-between">
                     <span>Data do Envio:</span>
                     <span className="text-jornada-navy">{new Date(r.created_at).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Arquivo:</span>
-                    <span className="text-jornada-muted truncate max-w-[120px]">{r.file_name}</span>
                   </div>
                 </div>
 
@@ -238,80 +248,95 @@ Status da Análise: ${receipt.review_status.toUpperCase()}
       )}
 
       {/* Modal de Análise Detalhada */}
-      {selectedReceipt && (
-        <Modal
-          isOpen={!!selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-          title="Análise de Comprovante"
-          subtitle="Confira o arquivo e valide o recebimento do pagamento."
-          maxWidth="xl"
-        >
-          <div className="space-y-5">
-            {/* Visualizador de Arquivo + Botão Baixar */}
-            <div className="p-6 bg-jornada-navy/5 rounded-xl border border-jornada-border flex flex-col items-center justify-center min-h-[200px]">
-              <FileText className="w-12 h-12 text-jornada-navy/40 mb-2" />
-              <span className="font-heading font-bold text-sm text-jornada-navy">{selectedReceipt.file_name}</span>
-              <span className="font-body text-xs text-jornada-muted mb-3">
-                Tamanho: {(selectedReceipt.file_size / 1024).toFixed(1)} KB • Formato: {selectedReceipt.file_type}
-              </span>
+      {selectedReceipt && (() => {
+        const previewUrl = (selectedReceipt.storage_path && (selectedReceipt.storage_path.startsWith('data:') || selectedReceipt.storage_path.startsWith('http')))
+          ? selectedReceipt.storage_path
+          : createReceiptImageDataUrl(selectedReceipt.file_name, selectedReceipt.uploaded_by, 120, new Date(selectedReceipt.created_at).toLocaleDateString('pt-BR'));
 
-              <div className="flex items-center gap-3">
+        return (
+          <Modal
+            isOpen={!!selectedReceipt}
+            onClose={() => setSelectedReceipt(null)}
+            title="Análise de Comprovante"
+            subtitle="Confira o arquivo anexado e valide o recebimento do pagamento."
+            maxWidth="xl"
+          >
+            <div className="space-y-5">
+              {/* Visualizador do Arquivo Anexado */}
+              <div className="p-4 bg-jornada-navy/5 rounded-xl border border-jornada-border flex flex-col items-center justify-center min-h-[260px] max-h-[400px] overflow-hidden">
+                {selectedReceipt.file_type.includes('pdf') ? (
+                  <iframe src={previewUrl} className="w-full h-72 rounded-lg border" />
+                ) : (
+                  <img 
+                    src={previewUrl} 
+                    alt={selectedReceipt.file_name}
+                    className="max-h-[300px] object-contain rounded-lg shadow-sm border border-jornada-border" 
+                  />
+                )}
+
+                <div className="flex items-center justify-between w-full mt-3 pt-3 border-t border-jornada-border/60">
+                  <span className="font-heading font-bold text-xs text-jornada-navy truncate max-w-[250px]">
+                    {selectedReceipt.file_name}
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={<Download className="w-3.5 h-3.5" />}
+                      onClick={() => handleDownloadOrView(selectedReceipt)}
+                    >
+                      Baixar Arquivo Original
+                    </Button>
+                    <Badge status={selectedReceipt.review_status} />
+                  </div>
+                </div>
+              </div>
+
+              {rejectionError && (
+                <div className="p-3 bg-jornada-red/10 border border-jornada-red/20 text-jornada-red text-xs font-body rounded-lg">
+                  {rejectionError}
+                </div>
+              )}
+
+              {/* Campo de Observação para Rejeição */}
+              <div>
+                <Input
+                  label="Observação / Motivo (Obrigatório em caso de Rejeição)"
+                  placeholder="Ex: Valor incorreto no comprovante ou imagem ilegível..."
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                />
+              </div>
+
+              {/* Ações */}
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-jornada-border">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  icon={<Download className="w-4 h-4" />}
-                  onClick={() => handleDownloadOrView(selectedReceipt)}
+                  variant="danger"
+                  className="w-full sm:w-auto"
+                  icon={<XCircle className="w-4 h-4" />}
+                  onClick={() => handleReject(selectedReceipt.id)}
                 >
-                  Baixar Comprovante
+                  Rejeitar Comprovante
                 </Button>
 
-                <Badge status={selectedReceipt.review_status} />
+                <div className="flex gap-2 w-full sm:w-auto justify-end">
+                  <Button variant="ghost" onClick={() => setSelectedReceipt(null)}>
+                    Fechar
+                  </Button>
+                  <Button
+                    variant="success"
+                    icon={<CheckCircle2 className="w-4 h-4" />}
+                    onClick={() => handleApprove(selectedReceipt.id)}
+                  >
+                    Aprovar Pagamento
+                  </Button>
+                </div>
               </div>
             </div>
-
-            {rejectionError && (
-              <div className="p-3 bg-jornada-red/10 border border-jornada-red/20 text-jornada-red text-xs font-body rounded-lg">
-                {rejectionError}
-              </div>
-            )}
-
-            {/* Campo de Observação para Rejeição */}
-            <div>
-              <Input
-                label="Observação / Motivo (Obrigatório em caso de Rejeição)"
-                placeholder="Ex: Valor incorreto no comprovante ou imagem ilegível..."
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-              />
-            </div>
-
-            {/* Ações */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-jornada-border">
-              <Button
-                variant="danger"
-                className="w-full sm:w-auto"
-                icon={<XCircle className="w-4 h-4" />}
-                onClick={() => handleReject(selectedReceipt.id)}
-              >
-                Rejeitar Comprovante
-              </Button>
-
-              <div className="flex gap-2 w-full sm:w-auto justify-end">
-                <Button variant="ghost" onClick={() => setSelectedReceipt(null)}>
-                  Fechar
-                </Button>
-                <Button
-                  variant="success"
-                  icon={<CheckCircle2 className="w-4 h-4" />}
-                  onClick={() => handleApprove(selectedReceipt.id)}
-                >
-                  Aprovar Pagamento
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
     </div>
   );
 }

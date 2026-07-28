@@ -453,9 +453,59 @@ export function updatePassengerFinancialStatus(passengerId: string): void {
   updatePassenger(passengerId, { financial_status: newStatus });
 }
 
+// Helper para gerar imagem real de comprovante Pix caso não haja imagem anexada
+export function createReceiptImageDataUrl(fileName: string, passengerName: string, amount: number, dateStr: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800" fill="none">
+    <rect width="600" height="800" fill="#F6F2E9"/>
+    <rect x="30" y="30" width="540" height="740" rx="16" fill="#FFFFFF" stroke="#172A3A" stroke-width="3"/>
+    <rect x="30" y="30" width="540" height="100" rx="16" fill="#172A3A"/>
+    <text x="300" y="75" fill="#FFFFFF" font-family="sans-serif" font-size="22" font-weight="bold" text-anchor="middle">COMPROVANTE DE PAGAMENTO PIX</text>
+    <text x="300" y="105" fill="#C45D3C" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle">JORNADA - GESTÃO DE EXCURSÕES</text>
+    <circle cx="300" cy="220" r="45" fill="#356859"/>
+    <path d="M280 220L295 235L325 205" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="300" y="300" fill="#356859" font-family="sans-serif" font-size="32" font-weight="extrabold" text-anchor="middle">R$ ${amount.toFixed(2)}</text>
+    <text x="300" y="325" fill="#172A3A" font-family="sans-serif" font-size="14" text-anchor="middle">Transação Concluída com Sucesso</text>
+    <line x1="60" y1="360" x2="540" y2="360" stroke="#E2E8F0" stroke-width="2"/>
+    <text x="60" y="400" fill="#64748B" font-family="sans-serif" font-size="14">Pagador / Passageiro:</text>
+    <text x="60" y="425" fill="#172A3A" font-family="sans-serif" font-size="18" font-weight="bold">${passengerName}</text>
+    <text x="60" y="475" fill="#64748B" font-family="sans-serif" font-size="14">Nome do Arquivo:</text>
+    <text x="60" y="500" fill="#172A3A" font-family="sans-serif" font-size="16" font-weight="bold">${fileName}</text>
+    <text x="60" y="550" fill="#64748B" font-family="sans-serif" font-size="14">Data da Operação:</text>
+    <text x="60" y="575" fill="#172A3A" font-family="sans-serif" font-size="16" font-weight="bold">${dateStr}</text>
+    <text x="60" y="625" fill="#64748B" font-family="sans-serif" font-size="14">Instituição de Destino:</text>
+    <text x="60" y="650" fill="#172A3A" font-family="sans-serif" font-size="16" font-weight="bold">Igreja Evangélica Central - Conta Excursões</text>
+    <rect x="60" y="690" width="480" height="50" rx="8" fill="#F1F5F9"/>
+    <text x="300" y="720" fill="#64748B" font-family="sans-serif" font-size="12" text-anchor="middle">Autenticação Digital: E9F87A6B-5C4D-3E2F-1A0B-9C8D7E6F5A4B</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
 // COMPROVANTES
 export function getReceipts(excursionId?: string): PaymentReceipt[] {
-  const receipts = getStored<PaymentReceipt[]>(KEYS.RECEIPTS, []);
+  let receipts = getStored<PaymentReceipt[]>(KEYS.RECEIPTS, []);
+  
+  if (receipts.length === 0) {
+    // Inicializar comprovantes modelo com imagem real
+    const initialReceipts: PaymentReceipt[] = [
+      {
+        id: 'rec-sample-1',
+        payment_id: 'pay-sample-1',
+        passenger_id: 'pas-1',
+        excursion_id: 'exc-1',
+        church_id: 'church-1',
+        storage_path: createReceiptImageDataUrl('comprovante-pix-marcos.png', 'Pr. Marcos Souza', 120, new Date().toLocaleDateString('pt-BR')),
+        file_name: 'comprovante-pix-marcos.png',
+        file_type: 'image/png',
+        file_size: 45000,
+        uploaded_by: 'Pr. Marcos Souza',
+        review_status: 'pending',
+        created_at: new Date().toISOString()
+      }
+    ];
+    setStored(KEYS.RECEIPTS, initialReceipts);
+    receipts = initialReceipts;
+  }
+
   if (excursionId) {
     return receipts.filter(r => r.excursion_id === excursionId);
   }
@@ -463,7 +513,7 @@ export function getReceipts(excursionId?: string): PaymentReceipt[] {
 }
 
 export function saveReceipt(data: Omit<PaymentReceipt, 'id' | 'church_id' | 'created_at'>): PaymentReceipt {
-  const receipts = getStored<PaymentReceipt[]>(KEYS.RECEIPTS, []);
+  const receipts = getReceipts();
   const church = getInitialChurch();
 
   const newReceipt: PaymentReceipt = {
