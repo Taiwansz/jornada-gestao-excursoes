@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-jornada-navy: #172A3A;
+  --color-jornada-terracotta: #C45D3C;
+  --color-jornada-ivory: #F6F2E9;
+  --color-jornada-green: #356859;
+  --color-jornada-red: #B54747;
+  --font-archivo: 'Archivo', sans-serif;
+  --font-source-sans: 'Source Sans 3', sans-serif;
+}
+
+body {
+  background-color: #F6F2E9;
+  color: #172A3A;
+  font-family: var(--font-source-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-archivo);
+}
+
+/* Esconder scrollbar mantendo rolagem */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Estilos de Impressão para Relatórios e Recibos */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
